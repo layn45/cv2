@@ -1,0 +1,40 @@
+import cv2
+import time
+import mediapipe as mp
+import cvzone
+import numpy
+from cvzone.FaceMeshModule import FaceMeshDetector
+
+cap= cv2.VideoCapture(0)
+detector=FaceMeshDetector(maxFaces=1)
+pTime=0
+run=True
+
+while run:
+    success,img=cap.read()
+    img,faces=detector.findFaceMesh(img,draw=False)
+    
+    if faces:
+        face=faces[0]
+        pointr= face[145]
+        pointl=face[374]
+        cv2.circle(img,pointr,5,(0,255,0),cv2.FILLED)
+        cv2.circle(img,pointl,5,(0,255,0),cv2.FILLED)
+        cv2.line(img,pointr,pointl,(0,0,255),2)
+        W,_=detector.findDistance(pointl,pointr)
+        w=6.4    
+        f=574
+        d=(w*f)/W
+        
+        cvzone.putTextRect(img,f'depth:{int(d)}cm',(face[10][0]-100,face[10][1]-50),3,3,(0,0,0),(255,255,255),cv2.FONT_HERSHEY_PLAIN)
+    
+    ctime=time.time()
+    fps=1/(ctime-pTime)
+    pTime=ctime
+    cv2.putText(img,f'fps:{str(int(fps))}',(20,70),cv2.FONT_HERSHEY_PLAIN,3,(0,255,0),3)
+    
+    cv2.imshow('facedepth',img)
+    key=cv2.waitKey(1)
+    
+    if key ==ord('q'):
+        run =False
